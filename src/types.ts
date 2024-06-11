@@ -8,3 +8,9 @@ export interface ISearchResult {
     code: string;
     url: string;
 };
+
+export interface IInput {
+    url: string;
+    storeName: string;
+    fileName: string;
+};

@@ -15,10 +15,12 @@ export default class Scrapper {
     private countries: ICountries[];
     private driver!: Page;
     private results: Array<ISearchResult> = [];
+    private fileName: string;
 
-    constructor(urlStr: string, data: ICountries[]) {
+    constructor(urlStr: string, data: ICountries[], fileName: string) {
         this.url = urlStr;
         this.countries = data;
+        this.fileName = fileName;
     }
 
     async initialize(): Promise<void> {
@@ -28,7 +30,7 @@ export default class Scrapper {
         this.driver = await browser.newPage();
     }
 
-    async prepareUrl(countryCode: string): Promise<string> {
+    async prepareUrlGPlay(countryCode: string): Promise<string> {
         const baseUrl = new URL(this.url);
         const searchParams = baseUrl.searchParams;
         const queries = Array.from(searchParams.entries());
@@ -39,11 +41,16 @@ export default class Scrapper {
         return baseUrl.toString();
     }
 
-    async scrape(): Promise<void> {
+    async prepareUrlIos(countryCode: string): Promise<string> {
+        const modifiedUrl = this.url.replace(/\.com\/\/(.*?)\/app/, countryCode);
+        return modifiedUrl;
+    }
+
+    async scrapeGooglePlay(): Promise<void> {
         while (this.countries.length > 0) {
             const country = this.countries.pop();
             if (country) {
-                const url = await this.prepareUrl(country.code);
+                const url = await this.prepareUrlGPlay(country.code);
                 await this.driver.goto(url);
                 const installAble = await this.driver.$("xpath///button[@aria-label='Install']");
                 if (!installAble) {
@@ -53,9 +60,29 @@ export default class Scrapper {
             }
             else break;
         }
+        await this.driver.close();
 
         await this.exportToExcel();
     }
+
+    async scrapeIos(): Promise<void> {
+        while (this.countries.length > 0) {
+            const country = this.countries.pop();
+            if (country) {
+                const url = await this.prepareUrlIos(country.code);
+                await this.driver.goto(url);
+                const notInstallAble = await this.driver.$("#we-connecting-instructions");
+                if (notInstallAble) {
+                    this.results.push({ country: country.name, code: country.code, url });
+                }
+                else continue;
+            }
+            else break;
+        }
+        await this.driver.close();
+
+        await this.exportToExcel();
+    };
 
     async exportToExcel(): Promise<void> {
         const workBook = new ExcelJS.Workbook();
@@ -72,6 +99,6 @@ export default class Scrapper {
 
         const dataDir = path.join(process.cwd(), "results");
         if (!existsSync(dataDir)) mkdirSync(dataDir);
-        await workBook.xlsx.writeFile(path.join(dataDir, "report.xlsx"));
+        await workBook.xlsx.writeFile(path.join(dataDir, `${this.fileName}.xlsx`));
     }
 };
