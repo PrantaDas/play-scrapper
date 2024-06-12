@@ -36,7 +36,7 @@ export default async function ignition(): Promise<void> {
             );
             await iosScrapper.initialize();
             console.log("=> Scrapper initialized");
-            await iosScrapper.scrapeGooglePlay();
+            await iosScrapper.scrapeIos();
             console.log("=> Scraping Completed");
             break;
         default:

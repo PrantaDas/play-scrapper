@@ -25,7 +25,7 @@ export default class Scrapper {
 
     async initialize(): Promise<void> {
         const browser = await puppeteer.launch({
-            headless: true
+            headless: false
         });
         this.driver = await browser.newPage();
     }
@@ -42,8 +42,8 @@ export default class Scrapper {
     }
 
     async prepareUrlIos(countryCode: string): Promise<string> {
-        const modifiedUrl = this.url.replace(/\.com\/\/(.*?)\/app/, countryCode);
-        return modifiedUrl;
+        const url = new URL(this.url);
+        return url.origin + url.pathname.replace(/\/([a-z])*/, `/${countryCode}`);
     }
 
     async scrapeGooglePlay(): Promise<void> {

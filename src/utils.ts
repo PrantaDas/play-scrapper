@@ -27,16 +27,16 @@ export function retriveDataForIos(): Array<ICountries> | null {
         path.join(process.cwd(), 'misc', 'country.ios.txt'),
         "utf8"
     );
-    const parts = data.split(",").map((d) => {
-        const dataParts = d.trim();
-        const single = dataParts.split(":").map((d) => d.trim());
+    const trimed = data.replace(/"/gi, '').trim();
+    const parts = trimed.split('\n').map((p) => p.slice(0, -1));
+    const final = parts.map((p) => {
         return {
-            name: single[0]?.trim(),
-            code: single[1]?.trim()
+            code: p.split(":")[0]?.trim().toLocaleLowerCase(),
+            name: p.split(":")[1]?.trim()
         };
     });
-    if (parts.length === 0) return null;
-    return parts;
+    if (final.length === 0) return null;
+    return final;
 };
 
 export async function fly(): Promise<IInput | void> {
