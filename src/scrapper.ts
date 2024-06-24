@@ -25,7 +25,7 @@ export default class Scrapper {
 
     async initialize(): Promise<void> {
         const browser = await puppeteer.launch({
-            headless: false
+            headless: true
         });
         this.driver = await browser.newPage();
     }
